@@ -10,11 +10,14 @@ package cpsc2150.extendedTicTacToe.models;
  * @invariant 0 <= row < 5 AND 0 <= col < 8 AND row = #row AND col = #col
  */
 public interface IGameBoard {
-    public static final int MAX_ROW = 5;
-    public static final int MAX_COL = 8;
-    public static final int numToWin = 5;
-    public static final int MIN_ROW = 0;
-    public static final int MIN_COL = 0;
+    public static final int MAX_ROW = 100;
+    public static final int MAX_COL = 100;
+    public static final int numToWin = 25;
+    public static final int MIN_ROW = 3;
+    public static final int MIN_COL = 3;
+
+    public static final int MIN_WIN = 3;
+
 
 
     /**
@@ -58,15 +61,11 @@ public interface IGameBoard {
      * @post checkSpace = true AND FALSE otherwise
      */
     default public boolean checkSpace(BoardPosition pos){
-        //returns true if the position specified in pos is available;
-        //false otherwise. If a space is not in bounds, then it is not available
-        if (whatsAtPos(pos) == ' ')
-        {
-            return true;
-        }
-        else
-        {
+        if(pos.getRow() >= getNumRows() || pos.getRow() < 0 || pos.getColumn() >= getNumColumns() || pos.getColumn() < 0 || whatsAtPos(pos) != ' '){
             return false;
+        }
+        else {
+            return true;
         }
     }
 
@@ -88,11 +87,14 @@ public interface IGameBoard {
      *
      * @return returns true if the game is won
      *
-     * @pre checkSpace(lastPos) = false AND lastPos.getRow() < MAX_ROW AND lastPos.getColumn() < MAX_COL
+     * @pre checkSpace(lastPos) = false AND lastPos.getRow() < getNumRow AND lastPos.getColumn() < getNumColumn
      * @post checkForWinner = true if checkForVerticalWin OR checkForHorizontalWin
      * OR checkForDiagonalWin = true AND false otherwise
      */
     default public boolean checkForWinner(BoardPosition lastPos){
+        if(whatsAtPos(lastPos) == '\0'){
+            return false;
+        }
         return checkVerticalWin(lastPos,whatsAtPos(lastPos)) || checkHorizontalWin(lastPos,whatsAtPos(lastPos)) || checkDiagonalWin(lastPos,whatsAtPos(lastPos));
     }
 
@@ -104,8 +106,8 @@ public interface IGameBoard {
      * @return returns true if the game is won
      *
      * @pre 0 <= lastPos.getRow() < MAX_ROW AND 0 <= lastPos.getColumn() < MAX_COL
-     * @post checkVerticalWin = true if [numToWin of same char marker in a vertical row] AND checkVerticalWin
-     * = false if [numTOWIN of same char marker not in a vertical row]
+     * @post checkVerticalWin = true if [getNumRow of same char marker in a vertical row] AND checkVerticalWin
+     * = false if [getNumColumn of same char marker not in a vertical row]
      */
     default public boolean checkVerticalWin(BoardPosition lastPos, char player){
 
@@ -125,7 +127,7 @@ public interface IGameBoard {
             }
         }
         //check down
-        for (int i = row + 1; i < MAX_ROW; i++)
+        for (int i = row + 1; i < getNumRows(); i++)
         {
             if (whatsAtPos(new BoardPosition(i,col)) == player)
             {
@@ -136,7 +138,7 @@ public interface IGameBoard {
                 break;
             }
         }
-        if (count >= numToWin)
+        if (count >= getNumToWin())
         {
             return true;
         }
@@ -153,9 +155,9 @@ public interface IGameBoard {
      *
      * @return returns true if the game is won
      *
-     * @pre 0 <= lastPos.getRow() < MAX_ROW AND 0 <= lastPos.getColumn() < MAX_COL
-     * @post checkHorizontalWin = true if [numToWin of same char marker in a horizontal row] AND checkHorizontalWin
-     * = false if [numTOWIN of same char marker not in a horizontal row]
+     * @pre 0 <= lastPos.getRow() < getNumRow AND 0 <= lastPos.getColumn() < getNumColumn
+     * @post checkHorizontalWin = true if [getNumToWin of same char marker in a horizontal row] AND checkHorizontalWin
+     * = false if [getNumToWin of same char marker not in a horizontal row]
      */
     default public boolean checkHorizontalWin(BoardPosition lastPos, char player){
         int count = 0;
@@ -174,7 +176,7 @@ public interface IGameBoard {
             }
         }
         //check right
-        for (int i = col + 1; i < MAX_COL; i++)
+        for (int i = col + 1; i < getNumColumns(); i++)
         {
             if (whatsAtPos(new BoardPosition(row,i)) == player)
             {
@@ -185,7 +187,7 @@ public interface IGameBoard {
                 break;
             }
         }
-        return count >= numToWin;
+        return count >= getNumToWin();
     }
 
     /**
@@ -195,9 +197,9 @@ public interface IGameBoard {
      *
      * @return returns true if the game is won
      *
-     * @pre 0 <= lastPos.getRow() < MAX_ROW AND 0 <= lastPos.getColumn() < MAX_COL
-     * @post checkDiagonalWin = true if [numToWin of same char marker in a diagonal row] AND checkDiagonalWin
-     * = false if [numTOWIN of same char marker not in a diagonal row]
+     * @pre 0 <= lastPos.getRow() < getNumRows AND 0 <= lastPos.getColumn() < getNumColumns
+     * @post checkDiagonalWin = true if [getNumToWin of same char marker in a diagonal row] AND checkDiagonalWin
+     * = false if [getNumToWin of same char marker not in a diagonal row]
      */
     default public boolean checkDiagonalWin(BoardPosition lastPos, char player){
         int count = 0;
@@ -216,7 +218,7 @@ public interface IGameBoard {
             }
         }
         //check down right
-        for (int i = row + 1, j = col + 1; i < MAX_ROW && j < MAX_COL; i++, j++)
+        for (int i = row + 1, j = col + 1; i < getNumRows() && j < getNumColumns(); i++, j++)
         {
             if (whatsAtPos(new BoardPosition(i,j)) == player)
             {
@@ -227,13 +229,13 @@ public interface IGameBoard {
                 break;
             }
         }
-        if (count >= numToWin)
+        if (count >= getNumToWin())
         {
             return true;
         }
         count = 0;
         //check up right
-        for (int i = row, j = col; i >= 0 && j < MAX_COL; i--, j++)
+        for (int i = row, j = col; i >= 0 && j < getNumColumns(); i--, j++)
         {
             if (whatsAtPos(new BoardPosition(i,j)) == player)
             {
@@ -245,7 +247,7 @@ public interface IGameBoard {
             }
         }
         //check down left
-        for (int i = row + 1, j = col - 1; i < MAX_ROW && j >= 0; i++, j--)
+        for (int i = row + 1, j = col - 1; i < getNumRows() && j >= 0; i++, j--)
         {
             if (whatsAtPos(new BoardPosition(i,j)) == player)
             {
@@ -256,7 +258,7 @@ public interface IGameBoard {
                 break;
             }
         }
-        return count >= numToWin;
+        return count >= getNumToWin();
     }
 
     /**
@@ -265,7 +267,7 @@ public interface IGameBoard {
      *
      * @return returns true if the game is tied
      *
-     * @pre 0 <= lastPos.getRow() < MAX_ROW AND 0 <= lastPos.getColumn() < MAX_COL
+     * @pre 0 <= lastPos.getRow() < getNumRow AND 0 <= lastPos.getColumn() < getNumColumn
      * @post checkForDraw = true if [board is full AND checkForWinner = false] AND
      * checkForDraw = false if [board is not full OR checkForWinner = true]
      */
@@ -275,9 +277,9 @@ public interface IGameBoard {
         BoardPosition lastPos = new BoardPosition(0,0);
         if (checkForWinner(lastPos) == false)
         {
-            for (int i = 0; i < MAX_ROW; i++)
+            for (int i = 0; i < getNumRows(); i++)
             {
-                for (int j = 0; j < MAX_COL; j++)
+                for (int j = 0; j < getNumColumns(); j++)
                 {
                     if (whatsAtPos(new BoardPosition(i,j)) == ' ')
                     {
@@ -300,7 +302,7 @@ public interface IGameBoard {
      *
      * @return returns what is in the board at a specific position
      *
-     * @pre 0 <= pos.getRow() < MAX_ROW AND 0 <= pos.getColumn() < MAX_COL
+     * @pre 0 <= pos.getRow() < getNumRow AND 0 <= pos.getColumn() < getNumColumn
      * @post getBoardPosition = board[pos.getRow()][pos.getColumn()]
      */
     public char whatsAtPos(BoardPosition pos);
@@ -313,7 +315,7 @@ public interface IGameBoard {
      * @param pos The position on the board.
      * @param playerChar The player's marker.
      *
-     * @pre 0 <= pos.getRow() < MAX_ROW AND 0 <= pos.getColumn() < MAX_COL
+     * @pre 0 <= pos.getRow() < getNumRow AND 0 <= pos.getColumn() < getNumColumn
      * @post playerAtPos = board[pos.getRow()][pos.getColumn()] == playerChar
      */
     default public boolean isPlayerAtPos(BoardPosition pos, char playerChar){
